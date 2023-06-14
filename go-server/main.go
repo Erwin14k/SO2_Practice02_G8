@@ -65,6 +65,16 @@ type AllData struct {
 	AllProcesos     []counters   `json:"AllProcesos"`
 }
 
+// MemoryRow represents a row of memory information
+type MemoryRow struct {
+	InitialAddress string   `json:"initial_address"`
+	FinalAddress   string   `json:"final_address"`
+	SizeKB         int      `json:"size_kb"`
+	Permissions    []string `json:"permissions"`
+	Device         string   `json:"device"`
+	File           string   `json:"file"`
+}
+
 // createData creates the system data
 func createData() (string, error) {
 	// read /proc/mem_grupo8 file
@@ -174,7 +184,7 @@ func handlePost(w http.ResponseWriter, r *http.Request) {
 	pid, err := strconv.Atoi(string(body)) // Convert the body to an integer (PID)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest) // Return HTTP 400 Bad Request if the body is not a valid PID
-		fmt.Fprintln(w, "Invalid PID")
+		fmt.Fprintln(w, "Information: Invalid PID")
 		return
 	}
 
@@ -198,32 +208,116 @@ func handleRoute(w http.ResponseWriter, r *http.Request){
 
 // handleMemory handles the route "/memory"
 func handleMemory(w http.ResponseWriter, r *http.Request) {
-	body, err := ioutil.ReadAll(r.Body) // Read the request body
+	body, err := ioutil.ReadAll(r.Body) // Leer el cuerpo de la solicitud
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError) // Return HTTP 500 Internal Server Error if there's an error reading the body
+		w.WriteHeader(http.StatusInternalServerError) // Devolver HTTP 500 Internal Server Error si hay un error al leer el cuerpo
 		return
 	}
 
-	pid, err := strconv.Atoi(string(body)) // Convert the body to an integer (PID)
+	pid, err := strconv.Atoi(string(body)) // Convertir el cuerpo a un entero (PID)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest) // Return HTTP 500 Internal Server Error if there's an error killing the process
+		w.WriteHeader(http.StatusBadRequest) // Devolver HTTP 400 Bad Request si el cuerpo no es un PID válido
 		fmt.Fprintln(w, "Invalid PID")
 		return
 	}
 
-	// Excecute command cat /proc/pid/maps
-	cmd := exec.Command("cat", fmt.Sprintf("/proc/%d/maps", pid))
+	// Crear un comando para ejecutar el cat en /proc/pid/maps
+	cmd := exec.Command("sudo", "cat", fmt.Sprintf("/proc/%d/maps", pid))
 	output, err := cmd.Output()
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError) // Return HTTP 500 Internal Server Error if there's an error reading the body
+		w.WriteHeader(http.StatusInternalServerError) // Devolver HTTP 500 Internal Server Error si hay un error al ejecutar el comando
 		fmt.Fprintln(w, "Error reading process memory")
 		return
 	}
 
-	w.WriteHeader(http.StatusOK) // Return HTTP 200 request
+	rows := parseMemoryRows(string(output))
+	jsonData, err := json.Marshal(rows)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError) // Devolver HTTP 500 Internal Server Error si hay un error al generar el JSON
+		fmt.Fprintln(w, "Error generating JSON")
+		return
+	}
 
-	// Return data
-	fmt.Fprintln(w, string(output))
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK) // Establecer el código de estado HTTP 200 OK
+
+	// Escribir los datos del proceso en la respuesta
+	fmt.Fprintln(w, string(jsonData))
+}
+
+// parseMemoryRows parses the memory rows from the output of `cat /proc/pid/maps`
+func parseMemoryRows(output string) []MemoryRow {
+	rows := []MemoryRow{}
+
+	lines := strings.Split(output, "\n")
+	for _, line := range lines {
+		if line == "" {
+			continue
+		}
+
+		fields := strings.Fields(line)
+		if len(fields) < 6 {
+			continue
+		}
+
+		initialAddress := strings.Split(fields[0], "-")[0]
+		finalAddress := strings.Split(fields[0], "-")[1]
+		permissions := fields[1]
+		device := fields[3]
+		file := fields[5]
+
+		sizeKB := calculateSizeKB(initialAddress, finalAddress)
+
+		permissionsList := parsePermissions(permissions)
+
+		row := MemoryRow{
+			InitialAddress: initialAddress,
+			FinalAddress:   finalAddress,
+			SizeKB:         sizeKB,
+			Permissions:    permissionsList,
+			Device:         device,
+			File:           file,
+		}
+
+		rows = append(rows, row)
+	}
+
+	return rows
+}
+
+// calculateSizeKB calculates the size in kilobytes from the initial and final addresses
+func calculateSizeKB(initialAddress, finalAddress string) int {
+	initial, err := strconv.ParseUint(initialAddress, 16, 64)
+	if err != nil {
+		return 0
+	}
+
+	final, err := strconv.ParseUint(finalAddress, 16, 64)
+	if err != nil {
+		return 0
+	}
+
+	size := final - initial
+	sizeKB := int(size) / 1024
+
+	return sizeKB
+}
+
+// parsePermissions parses the permissions string and returns a list of permissions
+func parsePermissions(permissions string) []string {
+	perms := []string{}
+
+	if strings.Contains(permissions, "r") {
+		perms = append(perms, "Lectura")
+	}
+	if strings.Contains(permissions, "w") {
+		perms = append(perms, "Escritura")
+	}
+	if strings.Contains(permissions, "x") {
+		perms = append(perms, "Ejecucion")
+	}
+
+	return perms
 }
 
 func main() {
@@ -232,11 +326,10 @@ func main() {
 	fmt.Println("************************************************************")
 
 	router := mux.NewRouter().StrictSlash(true) // Create a new router instance
-	/*router.HandleFunc("/", handleRoute) // Set the handler function for the root route ("/")
+	router.HandleFunc("/", handleRoute) // Set the handler function for the root route ("/")
 	router.HandleFunc("/tasks", handlePost).Methods("POST") // Set the handler function for the "/tasks" route with POST method
 	router.HandleFunc("/tasks", handleGet).Methods("GET") // Set the handler function for the "/tasks" route with GET method
-*/
-	router.HandleFunc("/memory", handlePost).Methods("POST")
+	router.HandleFunc("/memory", handleMemory).Methods("POST")
 
 	handler := cors.Default().Handler(router) // Create a new CORS handler with default settings
 	log.Fatal(http.ListenAndServe(":8080", handler)) // Start the HTTP server and listen on port 8080
