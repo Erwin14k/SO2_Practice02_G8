@@ -160,7 +160,7 @@ func createData() (string, error) {
 
 // handleGet handles the GET request
 func handleGet(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("GET")
+	// fmt.Println("GET")
 
 	allData, err := createData() // Get all process data in JSON format
 	if err != nil {
