@@ -12,6 +12,7 @@
 #include <linux/mm.h>
 // Header to use the task_struct
 #include <linux/sched.h> 
+#include <linux/sched/signal.h> //to recognize for_each_procces 
 // Use for filp_open and filp_close
 #include <linux/fs.h> 
 // Reading process info 0_RDONLY
@@ -28,6 +29,7 @@
 MODULE_LICENSE("GPL");
 MODULE_DESCRIPTION("Modulo CPU, Laboratorio Sistemas Operativos 2");
 MODULE_AUTHOR("GRUPO 8");
+
 
 static int calcular_porcentaje_cpu_total(void)
 {
@@ -122,7 +124,7 @@ static int escribir_archivo(struct seq_file *archivo, void *v)
             seq_printf(archivo, ",\"usuario\": \"");
             seq_printf(archivo, "%d", cpu->real_cred->uid);
             seq_printf(archivo, "\",\"estado\": \"");
-            seq_printf(archivo, "%s", obtain_state(cpu->__state));
+            seq_printf(archivo, "%s", obtain_state(cpu->state));
 	    seq_printf(archivo, "\"");
             if (cpu->mm) {
                 ram = (get_mm_rss(cpu->mm)<<PAGE_SHIFT)/(1024*1024); // MB
@@ -136,7 +138,7 @@ static int escribir_archivo(struct seq_file *archivo, void *v)
 
             //contar 
             count_total++;
-            switch(cpu->__state) {
+            switch(cpu->state) {
                 case TASK_RUNNING:
                     count_running++;
                     break;
