@@ -242,7 +242,7 @@ func handleMemory(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK) // Establecer el código de estado HTTP 200 OK
 	
-	fmt.Println("Information: Process Memory PID", pid," : ",string(output)) 
+	fmt.Println("Information: Process Memory PID", pid) 
 	// Escribir los datos del proceso en la respuesta
 	fmt.Fprintln(w, string(jsonData))
 }
