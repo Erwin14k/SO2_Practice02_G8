@@ -54,24 +54,15 @@ function AdministradorTareas({ AllProcesos, AllGenerales }) {
       });
 
       if (response.ok) {
-        console.log('La solicitud POST fue exitosa');
-        // Recuperar la respuesta como JSON
         const data = await response.json();
+        console.log('La solicitud POST fue exitosa');
         setPid(pid);
-
-        // Realizar acciones adicionales con la respuesta JSON
-        console.log("1//", data);
         setArrMemory(data);
-
-
-        // Realizar acciones adicionales si la solicitud es exitosa
       } else {
         console.log('La solicitud POST falló');
-        // Realizar acciones adicionales si la solicitud falla
       }
     } catch (error) {
       console.log('Error al realizar la solicitud POST:', error);
-      // Realizar acciones adicionales en caso de error
     }
   };
 
