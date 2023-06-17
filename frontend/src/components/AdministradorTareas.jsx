@@ -125,7 +125,7 @@ function AdministradorTareas({ AllProcesos, AllGenerales }) {
             <th style={{ width: 200 }}><Typography variant="h5" color="inherit" component="div"><b>Padre</b></Typography></th>
             <th style={{ width: 200 }}><Typography variant="h5" color="inherit" component="div"><b>Show More</b></Typography></th>
             <th style={{ width: 200 }}><Typography variant="h5" color="inherit" component="div"><b>Kill</b></Typography></th>
-            <th style={{ width: 200 }}><Typography variant="h5" color="inherit" component="div"><b>Ver Memoria</b></Typography></th>
+            <th style={{ width: 200 }}><Typography variant="h5" color="inherit" component="div"><b>Ver Asignación de Memoria</b></Typography></th>
           </tr>
         </thead>
         <tbody>
