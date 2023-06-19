@@ -75,7 +75,8 @@ type MemoryRow struct {
 	File           string   `json:"file"`
 }
 
-// createData creates the system data
+/* createData creates the system data by reading the contents of specific files, 
+ processing the data, and returning a JSON representation of the system information.*/
 func createData() (string, error) {
 	// read /proc/mem_grupo8 file
 	outRAM, err := ioutil.ReadFile("/proc/mem_grupo8")
@@ -158,7 +159,10 @@ func createData() (string, error) {
 	return string(allDataJSON), nil
 }
 
-// handleGet handles the GET request
+// handleGet handles the GET request, receives a response writer and a request object as parameters, and returns no value. 
+// It generates system data using the createData function and sends it as a JSON response.
+// w - http.ResponseWriter: The response writer used to write the HTTP response.
+// r - *http.Request: The HTTP request received.
 func handleGet(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("GET")
 
@@ -172,7 +176,10 @@ func handleGet(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, allData)
 }
 
-// handlePost handles the POST request
+// handlePost handles the POST request by reading the request body, extracting the PID (process ID), and killing the corresponding process.
+// If successful, it returns an HTTP 200 OK status code and a response message indicating that the process has been deleted.
+// w - http.ResponseWriter: The response writer used to write the HTTP response.
+// r - *http.Request: The HTTP request received.
 func handlePost(w http.ResponseWriter, r *http.Request) {
 
 	body, err := ioutil.ReadAll(r.Body) // Read the request body
@@ -201,53 +208,56 @@ func handlePost(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintln(w, "Process deleted")        // Write the response message to the response writer
 }
 
-// handleRoute handles the route "/"
+// handleRoute handles the route "/", prints single a message only.
+// w - http.ResponseWriter: The response writer used to write the HTTP response.
+// r - *http.Request: The HTTP request received.
 func handleRoute(w http.ResponseWriter, r *http.Request){
 	fmt.Fprintf(w, "Welcome to my API :D")
 }
 
-// handleMemory handles the route "/memory"
+// handleMemory handles the route "/memory" by reading the request body, extracting the PID (process ID), and retrieving the memory information of the process.
+// It executes the "cat /proc/pid/maps" command, parses the output, generates JSON data, and sends it as the response.
+// w - http.ResponseWriter: The response writer used to write the HTTP response.
+// r - *http.Request: The HTTP request received.
 func handleMemory(w http.ResponseWriter, r *http.Request) {
-	body, err := ioutil.ReadAll(r.Body) // Leer el cuerpo de la solicitud
+	body, err := ioutil.ReadAll(r.Body) // Read the request body
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError) // Devolver HTTP 500 Internal Server Error si hay un error al leer el cuerpo
+		w.WriteHeader(http.StatusInternalServerError) // Return HTTP 500 Internal Server Error if there's an error reading the body
 		return
 	}
 
-	pid, err := strconv.Atoi(string(body)) // Convertir el cuerpo a un entero (PID)
+	pid, err := strconv.Atoi(string(body)) // Convert the body to an integer (PID)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest) // Devolver HTTP 400 Bad Request si el cuerpo no es un PID válido
+		w.WriteHeader(http.StatusBadRequest) // Return HTTP 400 Bad Request if the body is not a valid PID
 		fmt.Fprintln(w, "Invalid PID")
 		return
 	}
 
-	// Crear un comando para ejecutar el cat en /proc/pid/maps
-	cmd := exec.Command("sudo", "cat", fmt.Sprintf("/proc/%d/maps", pid))
+	cmd := exec.Command("sudo", "cat", fmt.Sprintf("/proc/%d/maps", pid)) // Create a command to execute "cat /proc/pid/maps"
 	output, err := cmd.Output()
-	
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError) // Devolver HTTP 500 Internal Server Error si hay un error al ejecutar el comando
+		w.WriteHeader(http.StatusInternalServerError) // Return HTTP 500 Internal Server Error if there's an error executing the command
 		fmt.Fprintln(w, "Error reading process memory")
 		return
 	}
 
-	rows := parseMemoryRows(string(output))
-	jsonData, err := json.Marshal(rows)
+	rows := parseMemoryRows(string(output)) // Parse the memory rows from the command output
+	jsonData, err := json.Marshal(rows)     // Generate JSON data from the parsed rows
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError) // Devolver HTTP 500 Internal Server Error si hay un error al generar el JSON
+		w.WriteHeader(http.StatusInternalServerError) // Return HTTP 500 Internal Server Error if there's an error generating JSON
 		fmt.Fprintln(w, "Error generating JSON")
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK) // Establecer el código de estado HTTP 200 OK
-	
-	fmt.Println("Information: Process Memory PID", pid) 
-	// Escribir los datos del proceso en la respuesta
-	fmt.Fprintln(w, string(jsonData))
+	w.WriteHeader(http.StatusOK)              // Set HTTP 200 OK status code
+	fmt.Println("Information: Process Memory PID", pid)
+	fmt.Fprintln(w, string(jsonData))         // Write the process data to the response
 }
 
-// parseMemoryRows parses the memory rows from the output of `cat /proc/pid/maps`
+// parseMemoryRows parses the memory rows from the output of cat /proc/pid/maps command and returns an array of MemoryRow objects.
+// output - string: The output of cat /proc/pid/maps command.
+// Returns []MemoryRow: An array of MemoryRow objects representing the parsed memory rows.
 func parseMemoryRows(output string) []MemoryRow {
 	rows := []MemoryRow{}
 
@@ -287,7 +297,10 @@ func parseMemoryRows(output string) []MemoryRow {
 	return rows
 }
 
-// calculateSizeKB calculates the size in kilobytes from the initial and final addresses
+// calculateSizeKB calculates the size in kilobytes from the initial and final addresses.
+// initialAddress - string: The initial address.
+// finalAddress - string: The final address.
+// Returns int: The size in kilobytes.
 func calculateSizeKB(initialAddress, finalAddress string) int {
 	initial, err := strconv.ParseUint(initialAddress, 16, 64)
 	if err != nil {
@@ -305,7 +318,9 @@ func calculateSizeKB(initialAddress, finalAddress string) int {
 	return sizeKB
 }
 
-// parsePermissions parses the permissions string and returns a list of permissions
+// parsePermissions parses the permissions string and returns a list of permissions.
+// permissions - string: The permissions string.
+// Returns []string: A list of permissions.
 func parsePermissions(permissions string) []string {
 	perms := []string{}
 
@@ -322,6 +337,9 @@ func parsePermissions(permissions string) []string {
 	return perms
 }
 
+// main is the entry point of the application.
+// It sets up the router, defines the route handlers, and starts the HTTP server.
+// The server listens on port 8080 for incoming requests.
 func main() {
 	fmt.Println("************************************************************")
 	fmt.Println("*                 SO2 Practica 2 - Grupo 8                 *")

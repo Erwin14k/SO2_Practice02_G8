@@ -30,7 +30,10 @@ MODULE_LICENSE("GPL");
 MODULE_DESCRIPTION("Modulo CPU, Laboratorio Sistemas Operativos 2");
 MODULE_AUTHOR("GRUPO 8");
 
-
+// calcular_porcentaje_cpu_total calculates the total CPU usage percentage.
+// It reads the CPU times from the "/proc/stat" file, calculates the total CPU time,
+// and then calculates the CPU usage percentage based on the idle time.
+// It returns the CPU usage percentage as an integer.
 static int calcular_porcentaje_cpu_total(void)
 {
     // create a file pointer
@@ -62,7 +65,8 @@ static int calcular_porcentaje_cpu_total(void)
     return porcentaje;
 }
 
-// Function to get the state of the process from the state number
+// obtain_state is a function that returns the state of a process based on the state number.
+// It takes the state number as input and returns the corresponding state as a string.
 static const char* obtain_state(int estado)
 {
     const char* estado_str;
@@ -89,7 +93,8 @@ static const char* obtain_state(int estado)
     return estado_str;
 }
 
-// Function to write the information to the file
+// escribir_archivo is a function that writes information to a file.
+// It takes a file pointer and a void pointer as input and returns an integer.
 static int escribir_archivo(struct seq_file *archivo, void *v)
 {
     int porcentaje;
@@ -170,20 +175,29 @@ static int escribir_archivo(struct seq_file *archivo, void *v)
     return 0;
 }
 
-//Funcion executed every time with a cat command v
+// al_abrir is a function that is executed every time with a cat command.
+// inode - pointer to the inode structure
+// file - pointer to the file structure
 static int al_abrir(struct inode *inode, struct file *file)
 {
     return single_open(file, escribir_archivo, NULL);
 }
 
-// If the kernel is lower 5.6 
+// operaciones is a structure of file operations.
+// If the kernel version is lower than 5.6:
+// - open function is set to al_abrir
+// - read function is set to seq_read
 static struct file_operations operaciones =
 {
     .open = al_abrir,
     .read = seq_read
 };
 
-// Function to display the message when the module is created with insmod
+// _insert is a function that is called when the module is inserted using insmod.
+// It performs the following tasks:
+// - Creates a proc entry named "cpu_grupo8" with the file operations specified by operaciones.
+// - Displays a message indicating the successful creation of the module and the group information.
+// Returns 0 to indicate success.
 static int _insert(void)
 {
     proc_create("cpu_grupo8", 0, NULL, &operaciones);
@@ -191,7 +205,11 @@ static int _insert(void)
     return 0;
 }
 
-// Function to display the message when the module is deleted with rmmod
+// _remove is a function that is called when the module is removed using rmmod.
+// It performs the following tasks:
+// - Removes the proc entry named "cpu_grupo8".
+// - Displays a farewell message indicating the removal of the module and the group information.
+// This function does not return a value.
 static void _remove(void)
 {
     remove_proc_entry("cpu_grupo8", NULL);
