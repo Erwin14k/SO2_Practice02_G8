@@ -158,6 +158,8 @@ https://geo.mirror.pkgbuild.com/iso/2023.06.01/
 
 ![Untitled](Img/img36.png)
 
+- reboot
+
 - Comprobación de instalación exitosa
 
 ![Untitled](Img/img37.png)
