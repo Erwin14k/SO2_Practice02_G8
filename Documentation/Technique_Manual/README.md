@@ -100,7 +100,7 @@ https://geo.mirror.pkgbuild.com/iso/2023.06.01/
 
 ![Untitled](Img/img21.png)
 
-- Agregación del idioma
+- Agregación del idioma /etc/locale.gen
 
 ![Untitled](Img/img22.png)
 
