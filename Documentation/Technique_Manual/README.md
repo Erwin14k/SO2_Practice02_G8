@@ -112,7 +112,7 @@ https://geo.mirror.pkgbuild.com/iso/2023.06.01/
 
 ![Untitled](Img/img24.png)
 
-![Untitled](Img/img25.png)
+
 
 - Dejar indicada la red  /etc/hosts
 
