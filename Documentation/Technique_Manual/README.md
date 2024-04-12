@@ -72,7 +72,7 @@ https://geo.mirror.pkgbuild.com/iso/2023.06.01/
 
 ![Untitled](Img/img13.png)
 
-- Agregar repositorio para el kernel
+- Agregar repositorio para el kernel /etc/pacman.conf
 
 ![Untitled](Img/img14.png)
 
