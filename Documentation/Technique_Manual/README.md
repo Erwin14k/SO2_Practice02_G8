@@ -140,6 +140,8 @@ https://geo.mirror.pkgbuild.com/iso/2023.06.01/
 
 ![Untitled](Img/img32.png)
 
+- Ejecutar pacman -Syu
+
 - Inicio de instalación de interfaz gráfica
 
 ![Untitled](Img/img33.png)
