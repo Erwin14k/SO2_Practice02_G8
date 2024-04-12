@@ -76,7 +76,7 @@ https://geo.mirror.pkgbuild.com/iso/2023.06.01/
 
 ![Untitled](Img/img14.png)
 
-- Se agrega la llave
+- Se agrega la llave 76C6E477042BFE985CC220BD9C08A255442FAFF0
 
 ![Untitled](Img/img15.png)
 
