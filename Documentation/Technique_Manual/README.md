@@ -136,7 +136,7 @@ https://geo.mirror.pkgbuild.com/iso/2023.06.01/
 
 ![Untitled](Img/img31.png)
 
-- Descomentar
+- Descomentar  /etc/sudoers
 
 ![Untitled](Img/img32.png)
 
